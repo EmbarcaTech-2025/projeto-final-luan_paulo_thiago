@@ -28,8 +28,8 @@ Este exemplo assume a seguinte configuração de pinos:
 
 | Função | SPI0 | GPIO | Pico Pin | SD Card | Descrição                   |
 |--------|------|------|----------|---------|-----------------------------|
-| MISO   | RX   | 16   | 21       | DO      | Master In, Slave Out        |
-| MOSI   | TX   | 19   | 25       | DI      | Master Out, Slave In        |
+| MISO   | RX   | 16   | 21       | DataOut | Master In, Slave Out        |
+| MOSI   | TX   | 19   | 25       | DataIn  | Master Out, Slave In        |
 | SCK    | SCK  | 18   | 24       | CLK     | Clock do barramento SPI     |
 | CS     | CSn  | 17   | 22       | CS      | Chip Select do cartão       |
 | GND    | -    | -    | GND      | GND     | Terra                       |
