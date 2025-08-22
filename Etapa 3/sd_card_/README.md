@@ -32,9 +32,8 @@ Este exemplo assume a seguinte configuração de pinos:
 | MOSI   | TX   | 19   | 25       | DI      | Master Out, Slave In        |
 | SCK    | SCK  | 18   | 24       | CLK     | Clock do barramento SPI     |
 | CS     | CSn  | 17   | 22       | CS      | Chip Select do cartão       |
-| DET    | -    | 22   | 29       | CD      | Detecção de cartão (opcional) |
-| GND    | -    | -    | 18,23    | GND     | Terra                       |
-| 3V3    | -    | -    | 36       | 3.3V    | Alimentação                 |
+| GND    | -    | -    | GND      | GND     | Terra                       |
+| 3V3    | -    | -    | 3V3      | 3.3V    | Alimentação                 |
 
 ---
 
@@ -61,7 +60,7 @@ O programa segue os seguintes passos:
 O arquivo `hw_config.c` define a configuração do barramento SPI e do cartão SD:
 
 - Estrutura `spi_t` → Define qual SPI usar (nesse caso `spi0`), pinos **MISO/MOSI/SCK**, e baud rate.
-- Estrutura `sd_card_t` → Define cada cartão SD, associando-o ao SPI, pino **SLK**, e pino de detecção de cartão.
+- Estrutura `sd_card_t` → Define cada cartão SD, associando-o ao SPI, pino **CS**, e pino de detecção de cartão.
 - Funções auxiliares (`sd_get_by_num`, `spi_get_by_num`) permitem acessar os dispositivos configurados.
 
 Exemplo da configuração usada:
