@@ -1,6 +1,6 @@
 # Módulo SD Card com Raspberry Pi Pico (W) usando Pico SDK
 
-Este repositório demonstra como utilizar um **módulo SD Card** com a **Raspberry Pi Pico (ou Pico W)** utilizando o **Pico SDK** e a biblioteca **FatFs** para leitura e escrita em arquivos.
+Este repositório demonstra como utilizar um **módulo SD Card** com a **Raspberry Pi Pico Pico W** utilizando o **Pico SDK** e a biblioteca **FatFs** para leitura e escrita em arquivos.
 
 ---
 
@@ -9,14 +9,14 @@ Este repositório demonstra como utilizar um **módulo SD Card** com a **Raspber
 O projeto contém dois arquivos principais:
 
 - **`sd_card_.c`** → Código principal que inicializa o SD Card, cria/escreve em um arquivo `.txt` e depois lê o conteúdo de volta, enviando pela porta serial.
-- **`hw_config.c`** → Arquivo de configuração de hardware, responsável por mapear os pinos SPI utilizados para comunicação com o cartão SD.
-(lib\no-OS-FatFS-SD-SPI-RPi-Pico\FatFs_SPI\sd_driver\hw_config.c)
+- **`hw_config.c`** → Arquivo de configuração de hardware, responsável por mapear os pinos SPI utilizados para comunicação com o cartão SD
+(lib\no-OS-FatFS-SD-SPI-RPi-Pico\FatFs_SPI\sd_driver\hw_config.c).
 
 ---
 
 ##  Requisitos
 
-- **Raspberry Pi Pico ou Pico W**
+- **Raspberry Pi Pico W**
 - **Módulo MicroSD (com interface SPI)**
 - **Pico SDK** configurado no ambiente de desenvolvimento
 - **Biblioteca FatFs** (repositório indicado abaixo)
