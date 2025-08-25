@@ -5,7 +5,8 @@
 // Defina qual instância I2C usar (i2c0 ou i2c1)
 #define I2C_PORT i2c0
 
-// Pinos do barramento I2C (BitDogLab usa GPIO14 SDA, GPIO15 SCL para i2c1)
+// Pinos do barramento I2C (BitDogLab usa GPIO14 SDA, GPIO15 SCL para i2c1, porém essas GPIOs já são utilizadas pelo display OLED).
+// Portanto, serão utilizadas as GPIOs 0 e 1 para o canal i2c0.
 #define PIN_SDA 0
 #define PIN_SCL 1
 
@@ -42,7 +43,7 @@ int main() {
                 printf("Dispositivo encontrado no endereco 0x%02X\n", addr);
             }
         }
-
+        
         printf("Escaneamento concluido!\n\n");
         sleep_ms(5000); // espera 5s antes de repetir
     }
