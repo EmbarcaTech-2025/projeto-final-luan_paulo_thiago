@@ -28,35 +28,40 @@ set(PICO_BOARD pico_w CACHE STRING "Board type")
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
 
-project(sensor_button C CXX ASM)
+project(main_project C CXX ASM)
 
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(sensor_button main.c aht10.c bmp280.c button.c include/ssd1306_i2c.c display.c)
+add_executable(main_project main_project.c aht10.c bmp280.c button.c include/ssd1306_i2c.c display.c lib/no-OS-FatFS-SD-SPI-RPi-Pico/FatFs_SPI/sd_driver/hw_config.c)
 
-pico_set_program_name(sensor_button "sensor_button")
-pico_set_program_version(sensor_button "0.1")
+# Tell CMake where to find other source code
+add_subdirectory(lib/no-OS-FatFS-SD-SPI-RPi-Pico/FatFs_SPI build)
+
+pico_set_program_name(main_project "main_project")
+pico_set_program_version(main_project "0.1")
 
 # Modify the below lines to enable/disable output over UART/USB
-pico_enable_stdio_uart(sensor_button 1)
-pico_enable_stdio_usb(sensor_button 1)
+pico_enable_stdio_uart(main_project 1)
+pico_enable_stdio_usb(main_project 1)
 
 # Add the standard library to the build
-target_link_libraries(sensor_button
+target_link_libraries(main_project
         pico_stdlib
-        hardware_i2c)
+        hardware_i2c
+        FatFs_SPI
+        )
 
 # Add the standard include files to the build
-target_include_directories(sensor_button PRIVATE
+target_include_directories(main_project PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
 )
 
 # Add any user requested libraries
-target_link_libraries(sensor_button 
+target_link_libraries(main_project 
         pico_cyw43_arch_none
         )
 
-pico_add_extra_outputs(sensor_button)
+pico_add_extra_outputs(main_project)
