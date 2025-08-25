@@ -6,6 +6,7 @@
 #include "aht10.h"
 #include "bmp280.h"
 #include "button.h" // 1. INCLUA O NOVO HEADER
+#include "display.h"
 
 int main() {
     stdio_init_all();
@@ -30,6 +31,7 @@ int main() {
     gpio_set_function(I2C_SCL_PIN, GPIO_FUNC_I2C);
     gpio_pull_up(I2C_SDA_PIN);
     gpio_pull_up(I2C_SCL_PIN);
+    display_init();
 
     bmp280_init();
     struct bmp280_calib_param params;
@@ -67,6 +69,7 @@ int main() {
             printf("Temp.  = %.2f C (BMP280)\n", temperature2 / 100.f);
             printf("-----------------\n\n");
             sleep_ms(2000);
+            display_show_data(temperature1, humidity, pressure);
 
         } else {
             // Desliga o LED para indicar que está pausado
