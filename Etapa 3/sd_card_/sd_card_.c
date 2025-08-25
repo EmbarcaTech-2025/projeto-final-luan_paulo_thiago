@@ -10,7 +10,7 @@ int main() {
     FIL fil;
     int ret;
     char buf[100];
-    char filename[] = "test02.txt";
+    char filename[] = "vacina.txt";
 
     // Initialize chosen serial port
     stdio_init_all();
@@ -24,8 +24,6 @@ int main() {
             break;
         }
     }
-
-
 */
 
     // Initialize SD card
