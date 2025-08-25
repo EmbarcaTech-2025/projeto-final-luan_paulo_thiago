@@ -28,25 +28,18 @@ void display_init() {
 
 void display_clear(void) {
     memset(ssd, 0, ssd1306_buffer_length);
-    render_on_display(ssd, &frame_area);
 }
 
 void display_show_text(int x, int y, const char *text) {
+    display_clear();  // limpa buffer antes
     ssd1306_draw_string(ssd, x, y, (char *)text);
     render_on_display(ssd, &frame_area);
 }
 
-void display_show_data(float temperature, float humidity, float pressure) {
+void display_show_data(float temperature) {
     char buffer[32];
-
-    display_clear();
-
-    snprintf(buffer, sizeof(buffer), "Temp: %.1f C", temperature);
-    display_show_text(0, 0, buffer);
-
-    snprintf(buffer, sizeof(buffer), "Hum:  %.1f %%", humidity);
-    display_show_text(0, 10, buffer);
-
-    snprintf(buffer, sizeof(buffer), "Pres: %.1f hPa", pressure);
-    display_show_text(0, 20, buffer);
+    display_clear();  // limpa antes de redesenhar
+    snprintf(buffer, sizeof(buffer), "Temp: %.2f C", temperature);
+    ssd1306_draw_string(ssd, 0, 32, buffer);
+    render_on_display(ssd, &frame_area);
 }

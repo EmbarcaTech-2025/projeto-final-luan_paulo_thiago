@@ -5,27 +5,31 @@
 
 #include "aht10.h"
 #include "bmp280.h"
-#include "button.h" // 1. INCLUA O NOVO HEADER
+#include "button.h"
 #include "display.h"
+#include "joystick.h"
+#include "led.h"
+
+int temp_limit = 25;        // limite inicial
+bool setting_mode = false;  // se está no modo ajuste
 
 int main() {
     stdio_init_all();
-    button_init(); // 2. INICIALIZE O BOTÃO
-    
-    // Initialise the Wi-Fi chip
+    button_init();
+    joystick_init();
+    led_init();
+
+    // Inicializa Wi-Fi/LED (BitDogLab usa o LED da Pico W)
     if (cyw43_arch_init()) {
         printf("Wi-Fi init failed\n");
         return -1;
     }
-
-    // A Pico W LED inicialmente fica desligada
     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
 
     printf("Hello, Sensors!\n");
     printf("Pressione o botao no pino GPIO %d para iniciar/parar as leituras.\n", BUTTON_PIN);
 
-
-    // I2C is "open drain", pull ups to keep signal high when no data is being sent
+    // Inicializa I2C + display OLED
     i2c_init(I2C_PORT, 100 * 1000);
     gpio_set_function(I2C_SDA_PIN, GPIO_FUNC_I2C);
     gpio_set_function(I2C_SCL_PIN, GPIO_FUNC_I2C);
@@ -33,6 +37,7 @@ int main() {
     gpio_pull_up(I2C_SCL_PIN);
     display_init();
 
+    // Inicializa BMP280
     bmp280_init();
     struct bmp280_calib_param params;
     bmp280_get_calib_params(&params);
@@ -44,38 +49,65 @@ int main() {
     float humidity;
     float dew;
 
-    sleep_ms(250); 
+    sleep_ms(250);
+
     while (1) {
-        // 3. VERIFICA O ESTADO ANTES DE LER OS DADOS
+        // --- Verificar botão C (JOYSTICK SW) apenas se as leituras não estiverem ativas ---
+        if (!is_reading_active() && gpio_get(JOY_SW) == 0) {
+            sleep_ms(200); // debounce
+            setting_mode = !setting_mode;
+            printf("Modo config: %s\n", setting_mode ? "ON" : "OFF");
+        }
+
+        // --- Joystick ativo apenas no modo config e se as leituras não estiverem ativas ---
+        joystick_update_limit(&temp_limit, setting_mode && !is_reading_active());
+
         if (is_reading_active()) {
-            // Liga o LED para indicar que está lendo
-            cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
-            
-            // --- Leitura do AHT10 ---
+
+            // Sensores
             temperature1 = GetTemperature();
-            humidity= GetHumidity();
+            humidity = GetHumidity();
             dew = GetDewPoint();
-            printf("-----------------\n");
-            printf("Hum.  = %.2f %%\n", humidity);
-            printf("Temp. = %.2f C (AHT10)\n", temperature1);
-            printf("Dew   = %.2f C\n", dew);
-            sleep_ms(2000);
-            
-            // --- Leitura do BMP280 ---
+
             bmp280_read_raw(&raw_temperature, &raw_pressure);
             int32_t temperature2 = bmp280_convert_temp(raw_temperature, &params);
-            int32_t pressure = bmp280_convert_pressure(raw_pressure, raw_temperature, &params);
-            printf("Press. = %.3f kPa\n", pressure / 1000.f);
-            printf("Temp.  = %.2f C (BMP280)\n", temperature2 / 100.f);
-            printf("-----------------\n\n");
-            sleep_ms(2000);
-            display_show_data(temperature1, humidity, pressure);
+
+            float temperature = ((temperature2 / 100.f) + temperature1) / 2.0f;
+
+            // Verifica limite
+            if (temperature > temp_limit) {
+                gpio_put(LED_R, 1);
+                gpio_put(LED_G, 0);
+                gpio_put(LED_B, 0);
+            } 
+            else if(temperature > temp_limit - 5){
+                gpio_put(LED_R, 1);
+                gpio_put(LED_G, 1);
+                gpio_put(LED_B, 0);
+            }
+            else {
+                gpio_put(LED_R, 0);
+                gpio_put(LED_G, 1);
+                gpio_put(LED_B, 0);
+            }
+            display_show_data(temperature);
 
         } else {
-            // Desliga o LED para indicar que está pausado
-            cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
-            // Pequeno delay para não sobrecarregar a CPU enquanto espera
-            sleep_ms(100);
+            // Leituras desativadas → LED apagado
+                gpio_put(LED_R, 0);
+                gpio_put(LED_G, 0);
+                gpio_put(LED_B, 0);
+
+            if (setting_mode) {
+                char buffer[32];
+                snprintf(buffer, sizeof(buffer), "Set Limit: %dC", temp_limit);
+                display_show_text(0, 32, buffer);
+            } else {
+                display_show_text(0, 32, "Leitura OFF");
+            }
         }
+        
+        // Pequena pausa para evitar uso excessivo da CPU
+        sleep_ms(10);
     }
 }

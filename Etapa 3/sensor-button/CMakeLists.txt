@@ -35,7 +35,7 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(sensor_button main.c aht10.c bmp280.c button.c include/ssd1306_i2c.c display.c)
+add_executable(sensor_button main.c aht10.c bmp280.c button.c include/ssd1306_i2c.c display.c joystick.c led.c)
 
 pico_set_program_name(sensor_button "sensor_button")
 pico_set_program_version(sensor_button "0.1")
@@ -47,7 +47,8 @@ pico_enable_stdio_usb(sensor_button 1)
 # Add the standard library to the build
 target_link_libraries(sensor_button
         pico_stdlib
-        hardware_i2c)
+        hardware_i2c
+        hardware_adc)
 
 # Add the standard include files to the build
 target_include_directories(sensor_button PRIVATE
