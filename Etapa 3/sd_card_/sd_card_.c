@@ -10,7 +10,7 @@ int main() {
     FIL fil;
     int ret;
     char buf[100];
-    char filename[] = "vacina.txt";
+    char filename[] = "vacinaaa.txt";
 
     // Initialize chosen serial port
     stdio_init_all();
@@ -26,8 +26,7 @@ int main() {
     }
 */
 
-    // Initialize SD card
-    if (!sd_init_driver()) {
+
         printf("ERROR: Could not initialize SD card\r\n");
         while (true);
     }

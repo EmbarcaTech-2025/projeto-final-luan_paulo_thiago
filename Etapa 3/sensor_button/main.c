@@ -10,14 +10,45 @@
 #include "joystick.h"
 #include "led.h"
 
+#include "sd_card.h"
+#include "ff.h"
+
+// variáveis sd card
+
+FRESULT fr;
+FATFS fs;
+FIL fil;
+int ret;
+char buf[100];
+char filename[] = "limites_excedidos.txt";
+
+// função grava sd card (mover para outro arquivo)
+
+void grava_sd_card(){
+                fr = f_mount(&fs, "0:", 1); // montar sd
+                fr = f_open(&fil, filename, FA_WRITE | FA_CREATE_ALWAYS); // abrir arquivo
+                ret = f_printf(&fil, "passou limite temperatura 2\r\n"); // escrever arquivo (linha)
+                // mexer lógica para salvar temperatura no sd card e adicionar "periodos" de tempo de gravação
+                fr = f_close(&fil); // fechar arquivo
+                f_unmount("0:"); // desmontar sd
+}
+
 int temp_limit = 25;        // limite inicial
 bool setting_mode = false;  // se está no modo ajuste
 
 int main() {
     stdio_init_all();
+
+    // inicializa sd card
+    sd_init_driver(); 
+    
     button_init();
     joystick_init();
     led_init();
+
+    /* 
+    
+    wifi está dando conflito com o sd card, provavelmente algum conflito no SPI
 
     // Inicializa Wi-Fi/LED (BitDogLab usa o LED da Pico W)
     if (cyw43_arch_init()) {
@@ -25,6 +56,9 @@ int main() {
         return -1;
     }
     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
+
+    */
+
 
     printf("Ola, Sensores!\n");
     printf("Pressione o botao no pino GPIO %d para iniciar/parar as leituras.\n", BUTTON_PIN);
@@ -79,6 +113,9 @@ int main() {
                 gpio_put(LED_R, 1);
                 gpio_put(LED_G, 0);
                 gpio_put(LED_B, 0);
+
+                grava_sd_card(); // mexer na lógica de gravação / período gravação de dados
+                
             } 
             else if(temperature > temp_limit - 5){
                 gpio_put(LED_R, 1);

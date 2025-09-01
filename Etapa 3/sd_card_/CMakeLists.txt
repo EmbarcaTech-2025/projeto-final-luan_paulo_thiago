@@ -39,7 +39,7 @@ add_executable(sd_card_ sd_card_.c
 lib/no-OS-FatFS-SD-SPI-RPi-Pico/FatFs_SPI/sd_driver/hw_config.c)
 
 # Tell CMake where to find other source code
-add_subdirectory(lib/no-OS-FatFS-SD-SPI-RPi-Pico/FatFs_SPI build)
+add_subdirectory(lib/no-OS-FatFS-SD-SPI-RPi-Pico/FatFs_SPI)
 
 pico_set_program_name(sd_card_ "sd_card_")
 pico_set_program_version(sd_card_ "0.1")
