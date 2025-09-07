@@ -35,7 +35,7 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(main_project main_project.c aht10.c bmp280.c button.c include/ssd1306_i2c.c display.c lib/no-OS-FatFS-SD-SPI-RPi-Pico/FatFs_SPI/sd_driver/hw_config.c)
+add_executable(main_project main_project.c aht10.c bmp280.c button.c include/ssd1306_i2c.c display.c thingspeak.c lib/no-OS-FatFS-SD-SPI-RPi-Pico/FatFs_SPI/sd_driver/hw_config.c)
 
 # Tell CMake where to find other source code
 add_subdirectory(lib/no-OS-FatFS-SD-SPI-RPi-Pico/FatFs_SPI build)
@@ -52,6 +52,7 @@ target_link_libraries(main_project
         pico_stdlib
         hardware_i2c
         FatFs_SPI
+        pico_cyw43_arch_lwip_threadsafe_background  
         )
 
 # Add the standard include files to the build

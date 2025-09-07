@@ -36,10 +36,19 @@ void display_show_text(int x, int y, const char *text) {
     render_on_display(ssd, &frame_area);
 }
 
-void display_show_data(float temperature) {
+void display_show_data(float temperature, bool wifi_connected) {
     char buffer[32];
     display_clear();  // limpa antes de redesenhar
+
     snprintf(buffer, sizeof(buffer), "Temp: %.2f C", temperature);
-    ssd1306_draw_string(ssd, 0, 32, buffer);
+    ssd1306_draw_string(ssd, 0, 16, buffer);
+
+    if (wifi_connected) {
+        ssd1306_draw_string(ssd, 0, 32, "WiFi: OK");
+    } else {
+        ssd1306_draw_string(ssd, 0, 32, "WiFi: OFF");
+    }
+
     render_on_display(ssd, &frame_area);
 }
+

@@ -13,6 +13,7 @@ extern struct render_area frame_area;
 void display_init(void);
 void display_clear(void);
 void display_show_text(int x, int y, const char *text);
-void display_show_data(float temperature);
+void display_show_data(float temperature, bool wifi_connected);
+
 
 #endif

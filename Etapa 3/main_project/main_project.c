@@ -11,6 +11,8 @@
 #include "button.h" // 1. INCLUA O NOVO HEADER
 #include "display.h"
 
+#include "thingspeak.h"
+
 // sd card
 
 FRESULT fr; // variavel sd card
@@ -159,7 +161,8 @@ int main() {
             printf("Temp.  = %.2f C (BMP280)\n", temperature2 / 100.f);
             printf("-----------------\n\n");
             sleep_ms(2000);
-            display_show_data(temperature1, humidity, pressure);
+            display_show_data(temperature1);
+            thingspeak_send(temperature1);
 
         } else {
             // Desliga o LED para indicar que está pausado

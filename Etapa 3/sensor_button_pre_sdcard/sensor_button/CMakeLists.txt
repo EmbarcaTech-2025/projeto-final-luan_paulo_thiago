@@ -35,7 +35,9 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(sensor_button main.c aht10.c bmp280.c button.c include/ssd1306_i2c.c display.c joystick.c led.c)
+add_executable(sensor_button main.c aht10.c bmp280.c button.c include/ssd1306_i2c.c thingspeak.c display.c joystick.c led.c sdcard.c lib/no-OS-FatFS-SD-SPI-RPi-Pico/FatFs_SPI/sd_driver/sd_card.c lib/no-OS-FatFS-SD-SPI-RPi-Pico/FatFs_SPI/sd_driver/hw_config.c)
+
+add_subdirectory(lib/no-OS-FatFS-SD-SPI-RPi-Pico/FatFs_SPI build)
 
 pico_set_program_name(sensor_button "sensor_button")
 pico_set_program_version(sensor_button "0.1")
@@ -48,16 +50,14 @@ pico_enable_stdio_usb(sensor_button 1)
 target_link_libraries(sensor_button
         pico_stdlib
         hardware_i2c
-        hardware_adc)
+        hardware_adc
+        pico_cyw43_arch_lwip_threadsafe_background
+        FatFs_SPI)
 
 # Add the standard include files to the build
 target_include_directories(sensor_button PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
+        ${CMAKE_CURRENT_LIST_DIR}/include
 )
-
-# Add any user requested libraries
-target_link_libraries(sensor_button 
-        pico_cyw43_arch_none
-        )
 
 pico_add_extra_outputs(sensor_button)
