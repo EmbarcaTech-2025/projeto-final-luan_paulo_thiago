@@ -10,6 +10,7 @@
 #include "joystick.h"
 #include "led.h"
 #include "thingspeak.h"
+#include "buzzer.h"
 
 #define WIFI_SSID "POCO X7 Pro"
 #define WIFI_PASSWORD "12345678"
@@ -43,6 +44,7 @@ int main() {
     button_init();
     joystick_init();
     led_init();
+    pwm_buzzer_init();
 
     // Inicializa Wi-Fi
     if (cyw43_arch_init()) {
@@ -137,6 +139,7 @@ int main() {
                 gpio_put(LED_G, 0);
                 gpio_put(LED_B, 0);
                 should_send = true;
+                buzzer_activation_2(BUZZER_A, BUZZER_B, 7812);
 
             } else if (temperature > temp_limit - 5) {
                 // Estado de alerta - amarelo
@@ -144,6 +147,7 @@ int main() {
                 gpio_put(LED_G, 1);
                 gpio_put(LED_B, 0);
                 should_send = true;
+                buzzer_activation_1(BUZZER_A, BUZZER_B, 7812);
 
             } else {
                 // Estado normal - verde

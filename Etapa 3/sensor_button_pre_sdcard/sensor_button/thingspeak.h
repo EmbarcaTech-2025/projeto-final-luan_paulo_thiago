@@ -4,11 +4,9 @@
 #include "pico/cyw43_arch.h"
 
 // --- CONFIGURAÇÕES DO THINGSPEAK ---
-// Substitua pelo seu Write API Key
 #define THINGSPEAK_API_KEY "F1M0J5Y2F0D7GZNA"
 #define THINGSPEAK_HOST "api.thingspeak.com"
 
-// Estrutura para manter o estado da requisição HTTP
 typedef struct HTTP_REQUEST_STATE_T {
     char http_request[256];
     ip_addr_t remote_addr;
@@ -17,8 +15,10 @@ typedef struct HTTP_REQUEST_STATE_T {
     bool complete;
 } HTTP_REQUEST_STATE;
 
-// Função principal para enviar dados ao ThingSpeak
-// Prepara e inicia o processo de envio
+// Variável global para indicar falhas de DNS
+extern bool thingspeak_dns_failed;
+
+// Função para enviar dados ao ThingSpeak
 void thingspeak_send(float temperature);
 
 #endif // THINGSPEAK_H

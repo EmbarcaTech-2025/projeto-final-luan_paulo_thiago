@@ -4,6 +4,9 @@
 #include <string.h>
 #include <stdio.h>
 
+static int dns_fail_count = 0;   // contador de falhas
+bool thingspeak_dns_failed = false; // flag de falha (visível no main)
+
 // Função para fechar a conexão TCP e limpar o estado
 static void http_request_close(HTTP_REQUEST_STATE *state) {
     if (state->tcp_pcb) {
@@ -89,7 +92,7 @@ static err_t http_connect_callback(void *arg, struct tcp_pcb *tpcb, err_t err) {
 static bool http_open_connection(HTTP_REQUEST_STATE *state) {
     cyw43_arch_lwip_begin();
     
-    // >> CORREÇÃO 1: A função tcp_new() não aceita argumentos nesta versão do LwIP.
+    // 
     state->tcp_pcb = tcp_new();
     
     cyw43_arch_lwip_end();
@@ -107,17 +110,26 @@ static bool http_open_connection(HTTP_REQUEST_STATE *state) {
     return err == ERR_OK;
 }
 
-// >> CORREÇÃO 2: Renomeamos a função para evitar conflito com o typedef da biblioteca.
+// 
 static void thingspeak_dns_found_cb(const char *name, const ip_addr_t *ipaddr, void *callback_arg) {
     HTTP_REQUEST_STATE *state = (HTTP_REQUEST_STATE *)callback_arg;
     if (ipaddr) {
         state->remote_addr = *ipaddr;
+        dns_fail_count = 0;  // zera contador ao resolver com sucesso
+        thingspeak_dns_failed = false;
         printf("IP do servidor encontrado: %s\n", ipaddr_ntoa(ipaddr));
         if (!http_open_connection(state)) {
             http_request_close(state);
         }
     } else {
-        printf("Falha na resolucao do DNS\n");
+        dns_fail_count++;
+        printf("Falha na resolucao do DNS (tentativa %d)\n", dns_fail_count);
+        
+        if (dns_fail_count >= 3) {
+            printf("DNS falhou 3 vezes. Ativando flag de falha.\n");
+            thingspeak_dns_failed = true;
+        }
+        
         http_request_close(state);
     }
 }
