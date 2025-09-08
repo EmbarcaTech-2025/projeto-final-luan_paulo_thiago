@@ -35,7 +35,7 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(sensor_button main.c aht10.c bmp280.c button.c include/ssd1306_i2c.c thingspeak.c display.c joystick.c led.c buzzer.c)
+add_executable(sensor_button src/main.c lib/aht10.c lib/bmp280.c lib/button.c include/ssd1306_i2c.c lib/thingspeak.c lib/display.c lib/joystick.c lib/led.c lib/buzzer.c)
 
 pico_set_program_name(sensor_button "sensor_button")
 pico_set_program_version(sensor_button "0.1")
@@ -50,7 +50,9 @@ target_link_libraries(sensor_button
         hardware_i2c
         hardware_adc
         pico_cyw43_arch_lwip_threadsafe_background
-        hardware_pwm)
+        hardware_pwm
+        fatfs
+        hardware_spi)
 
 # Add the standard include files to the build
 target_include_directories(sensor_button PRIVATE

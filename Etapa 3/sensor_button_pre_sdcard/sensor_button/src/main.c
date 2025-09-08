@@ -3,14 +3,18 @@
 #include "pico/cyw43_arch.h"
 #include "hardware/i2c.h"
 
-#include "aht10.h"
-#include "bmp280.h"
-#include "button.h"
-#include "display.h"
-#include "joystick.h"
-#include "led.h"
-#include "thingspeak.h"
-#include "buzzer.h"
+#include "lib/aht10.h"
+#include "lib/bmp280.h"
+#include "lib/button.h"
+#include "lib/display.h"
+#include "lib/joystick.h"
+#include "lib/led.h"
+#include "lib/thingspeak.h"
+#include "lib/buzzer.h"
+
+#include "ff.h"
+#include "hardware/spi.h"
+
 
 #define WIFI_SSID "POCO X7 Pro"
 #define WIFI_PASSWORD "12345678"
