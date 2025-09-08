@@ -9,6 +9,7 @@
 #include "display.h"
 #include "joystick.h"
 #include "led.h"
+#include "buzzer.h"
 
 #include "sd_card.h"
 #include "ff.h"
@@ -20,14 +21,14 @@ FATFS fs;
 FIL fil;
 int ret;
 char buf[100];
-char filename[] = "limites_excedidos.txt";
+char filename[] = "Grandezas_Próximas_dos_Limites.txt";
 
 // função grava sd card (mover para outro arquivo)
 
 void grava_sd_card(){
                 fr = f_mount(&fs, "0:", 1); // montar sd
                 fr = f_open(&fil, filename, FA_WRITE | FA_CREATE_ALWAYS); // abrir arquivo
-                ret = f_printf(&fil, "passou limite temperatura 2\r\n"); // escrever arquivo (linha)
+                ret = f_printf(&fil, "passou do limite de temperatura \r\n"); // escrever arquivo (linha)
                 // mexer lógica para salvar temperatura no sd card e adicionar "periodos" de tempo de gravação
                 fr = f_close(&fil); // fechar arquivo
                 f_unmount("0:"); // desmontar sd
@@ -45,6 +46,8 @@ int main() {
     button_init();
     joystick_init();
     led_init();
+    pwm_buzzer_init();
+    pwm_buzzer_init();
 
     /* 
     
@@ -114,13 +117,15 @@ int main() {
                 gpio_put(LED_G, 0);
                 gpio_put(LED_B, 0);
 
-                grava_sd_card(); // mexer na lógica de gravação / período gravação de dados
-                
+                buzzer_activation_2(BUZZER_A, BUZZER_B, 7812);
+                grava_sd_card(); // mexer na lógica de gravação / período gravação de dados   
             } 
             else if(temperature > temp_limit - 5){
                 gpio_put(LED_R, 1);
                 gpio_put(LED_G, 1);
                 gpio_put(LED_B, 0);
+
+                buzzer_activation_1(BUZZER_A, BUZZER_B, 7812);
             }
             else {
                 gpio_put(LED_R, 0);

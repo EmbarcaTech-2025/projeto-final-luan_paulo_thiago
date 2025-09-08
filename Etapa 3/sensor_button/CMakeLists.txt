@@ -35,7 +35,7 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(sensor_button main.c aht10.c bmp280.c button.c include/ssd1306_i2c.c display.c joystick.c led.c lib/no-OS-FatFS-SD-SPI-RPi-Pico/FatFs_SPI/sd_driver/hw_config.c)
+add_executable(sensor_button main.c aht10.c bmp280.c button.c include/ssd1306_i2c.c display.c joystick.c led.c buzzer.c lib/no-OS-FatFS-SD-SPI-RPi-Pico/FatFs_SPI/sd_driver/hw_config.c)
 
 # Tell CMake where to find other source code
 add_subdirectory(lib/no-OS-FatFS-SD-SPI-RPi-Pico/FatFs_SPI)
@@ -52,6 +52,8 @@ target_link_libraries(sensor_button
         pico_stdlib
         hardware_i2c
         hardware_adc
+        hardware_pwm
+        hardware_clocks
         FatFs_SPI
         )
 
