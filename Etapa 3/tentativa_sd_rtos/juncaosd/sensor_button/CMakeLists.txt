@@ -1,0 +1,78 @@
+# Generated Cmake Pico project file
+
+cmake_minimum_required(VERSION 3.13)
+
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# Initialise pico_sdk from installed location
+# (note this can come from environment, CMake cache etc)
+
+# == DO NOT EDIT THE FOLLOWING LINES for the Raspberry Pi Pico VS Code Extension to work ==
+if(WIN32)
+    set(USERHOME $ENV{USERPROFILE})
+else()
+    set(USERHOME $ENV{HOME})
+endif()
+set(sdkVersion 1.5.1)
+set(toolchainVersion 14_2_Rel1)
+set(picotoolVersion 2.0.0)
+set(picoVscode ${USERHOME}/.pico-sdk/cmake/pico-vscode.cmake)
+if (EXISTS ${picoVscode})
+    include(${picoVscode})
+endif()
+# ====================================================================================
+set(PICO_BOARD pico_w CACHE STRING "Board type")
+
+# Set any variables required for importing libraries
+if (DEFINED ENV{FREERTOS_PATH})
+  SET(FREERTOS_PATH $ENV{FREERTOS_PATH})
+else()
+  SET(FREERTOS_PATH ${CMAKE_CURRENT_LIST_DIR}/include/FreeRTOS-Kernel)
+endif()
+
+message("FreeRTOS Kernel located in ${FREERTOS_PATH}")
+
+# Pull in Raspberry Pi Pico SDK (must be before project)
+include(pico_sdk_import.cmake)
+include(${FREERTOS_PATH}/portable/ThirdParty/GCC/RP2040/FreeRTOS_Kernel_import.cmake)
+
+project(sensor_button C CXX ASM)
+
+# Initialise the Raspberry Pi Pico SDK
+pico_sdk_init()
+
+add_subdirectory(no-OS-FatFs-SD-SPI-RPi-Pico/FatFs_SPI)
+
+# Add executable. Default name is the project name, version 0.1
+
+add_executable(sensor_button src/main.c lib/aht10.c lib/bmp280.c lib/button.c include/ssd1306_i2c.c lib/thingspeak.c lib/display.c lib/joystick.c lib/led.c lib/buzzer.c lib/sensors_task.c lib/wifi_task.c lib/sd_card.c lib/hw_config.c lib/sd_card_log_task.c)
+
+pico_set_program_name(sensor_button "sensor_button")
+pico_set_program_version(sensor_button "0.1")
+
+# Modify the below lines to enable/disable output over UART/USB
+pico_enable_stdio_uart(sensor_button 1)
+pico_enable_stdio_usb(sensor_button 1)
+
+# Add the standard library to the build
+target_link_libraries(sensor_button
+        pico_stdlib
+        hardware_i2c
+        hardware_adc
+        pico_cyw43_arch_lwip_threadsafe_background
+        hardware_pwm
+        hardware_spi
+        hardware_rtc
+        FreeRTOS-Kernel-Heap4
+        FatFs_SPI
+        )
+
+# Add the standard include files to the build
+target_include_directories(sensor_button PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}
+        ${CMAKE_CURRENT_LIST_DIR}/include
+)
+
+pico_add_extra_outputs(sensor_button)
