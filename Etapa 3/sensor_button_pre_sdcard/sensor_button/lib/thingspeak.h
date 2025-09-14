@@ -2,6 +2,9 @@
 #define THINGSPEAK_H
 
 #include "pico/cyw43_arch.h"
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
 
 // --- CONFIGURAÇÕES DO THINGSPEAK ---
 #define THINGSPEAK_API_KEY "F1M0J5Y2F0D7GZNA"
@@ -18,7 +21,11 @@ typedef struct HTTP_REQUEST_STATE_T {
 // Variável global para indicar falhas de DNS
 extern bool thingspeak_dns_failed;
 
-// Função para enviar dados ao ThingSpeak
+// --- Fila e Task ---
+extern QueueHandle_t thingspeak_queue;
+void thingspeak_task_init(void);
+
+// Função para enviar dados ao ThingSpeak (usada internamente pela task)
 void thingspeak_send(float temperature);
 
 #endif // THINGSPEAK_H

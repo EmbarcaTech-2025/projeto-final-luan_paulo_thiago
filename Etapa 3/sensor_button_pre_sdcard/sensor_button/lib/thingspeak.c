@@ -1,11 +1,13 @@
 #include "thingspeak.h"
 #include "lwip/tcp.h"
 #include "lwip/dns.h"
+#include "wifi_task.h"
 #include <string.h>
 #include <stdio.h>
 
 static int dns_fail_count = 0;   // contador de falhas
 bool thingspeak_dns_failed = false; // flag de falha (visível no main)
+QueueHandle_t thingspeak_queue = NULL;
 
 // Função para fechar a conexão TCP e limpar o estado
 static void http_request_close(HTTP_REQUEST_STATE *state) {
@@ -170,4 +172,39 @@ void thingspeak_send(float temperature) {
         http_request_close(state);
     }
     // Se err == ERR_INPROGRESS, o callback `thingspeak_dns_found_cb` será chamado quando terminar.
+}
+
+// Task que processa envios ao ThingSpeak
+static void thingspeak_task(void *pvParameters) {
+    float temperature;
+
+    for (;;) {
+        // Espera indefinidamente por um valor
+        if (xQueueReceive(thingspeak_queue, &temperature, portMAX_DELAY)) {
+            if (wifi_connected && !thingspeak_dns_failed) {
+                printf("[ThingSpeak] Enviando %.2f °C\n", temperature);
+                thingspeak_send(temperature);
+            } else {
+                printf("[ThingSpeak] WiFi ou DNS indisponível, não enviando\n");
+            }
+        }
+    }
+}
+
+// Inicializa fila + task
+void thingspeak_task_init(void) {
+    thingspeak_queue = xQueueCreate(10, sizeof(float));
+    if (!thingspeak_queue) {
+        printf("Falha ao criar fila do ThingSpeak!\n");
+        return;
+    }
+
+    xTaskCreate(
+        thingspeak_task,
+        "ThingSpeakTask",
+        4096,
+        NULL,
+        tskIDLE_PRIORITY + 1,
+        NULL
+    );
 }
