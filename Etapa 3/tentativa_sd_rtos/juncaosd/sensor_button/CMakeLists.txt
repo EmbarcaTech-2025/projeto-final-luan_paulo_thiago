@@ -47,7 +47,7 @@ add_subdirectory(no-OS-FatFs-SD-SPI-RPi-Pico/FatFs_SPI)
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(sensor_button src/main.c lib/aht10.c lib/bmp280.c lib/button.c include/ssd1306_i2c.c lib/thingspeak.c lib/display.c lib/joystick.c lib/led.c lib/buzzer.c lib/sensors_task.c lib/wifi_task.c lib/sd_card.c lib/hw_config.c lib/sd_card_log_task.c)
+add_executable(sensor_button src/main.c lib/aht10.c lib/bmp280.c lib/button.c include/ssd1306_i2c.c lib/thingspeak.c lib/display.c lib/joystick.c lib/led.c lib/buzzer.c lib/sensors_task.c lib/wifi_task.c lib/sd_card.c lib/hw_config.c lib/sd_card_log_task.c lib/wifi_manager.c lib/rtc_ntp.c lib/logger.c lib/utils.c)
 
 pico_set_program_name(sensor_button "sensor_button")
 pico_set_program_version(sensor_button "0.1")

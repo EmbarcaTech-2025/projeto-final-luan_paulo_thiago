@@ -12,6 +12,10 @@
 #include "lib/sensors_task.h"
 #include "lib/thingspeak.h"
 #include "lib/sd_card_log_task.h"
+#include "credentials.h"
+#include "lib/wifi_manager.h"
+#include "lib/logger.h"
+#include "lib/rtc_ntp.h"
 
 int main() {
     stdio_init_all();
@@ -21,11 +25,12 @@ int main() {
 
     printf("Ola, Sensores!\n");
 
-    wifi_task_init();
+    //wifi_task_init();
+    wifi_manager_init_t();
     sensors_task_init();
     thingspeak_task_init();
 
-    //sd_card_log_task_init();
+    sd_card_log_task_init();
 
     vTaskStartScheduler();
 
