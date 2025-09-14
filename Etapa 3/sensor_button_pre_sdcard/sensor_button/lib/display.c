@@ -52,3 +52,12 @@ void display_show_data(float temperature, bool wifi_connected) {
     render_on_display(ssd, &frame_area);
 }
 
+void display_show_limit(int limit) {
+    char buf[32];
+    snprintf(buf, sizeof(buf), "Set Limit: %dC", limit);
+    display_show_text(0, 32, buf);
+}
+
+void display_show_off() {
+    display_show_text(0, 32, "Leitura OFF");
+}

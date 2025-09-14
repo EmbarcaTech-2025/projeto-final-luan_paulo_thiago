@@ -25,8 +25,18 @@ endif()
 # ====================================================================================
 set(PICO_BOARD pico_w CACHE STRING "Board type")
 
+# Set any variables required for importing libraries
+if (DEFINED ENV{FREERTOS_PATH})
+  SET(FREERTOS_PATH $ENV{FREERTOS_PATH})
+else()
+  SET(FREERTOS_PATH ${CMAKE_CURRENT_LIST_DIR}/include/FreeRTOS-Kernel)
+endif()
+
+message("FreeRTOS Kernel located in ${FREERTOS_PATH}")
+
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
+include(${FREERTOS_PATH}/portable/ThirdParty/GCC/RP2040/FreeRTOS_Kernel_import.cmake)
 
 project(sensor_button C CXX ASM)
 
@@ -35,7 +45,19 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(sensor_button src/main.c lib/aht10.c lib/bmp280.c lib/button.c include/ssd1306_i2c.c lib/thingspeak.c lib/display.c lib/joystick.c lib/led.c lib/buzzer.c)
+add_executable(sensor_button 
+src/main.c 
+lib/aht10.c 
+lib/bmp280.c 
+lib/button.c 
+lib/thingspeak.c 
+lib/display.c 
+lib/joystick.c 
+lib/led.c 
+lib/buzzer.c
+lib/wifi.c
+lib/sensor.c
+include/ssd1306_i2c.c)
 
 pico_set_program_name(sensor_button "sensor_button")
 pico_set_program_version(sensor_button "0.1")
@@ -51,8 +73,9 @@ target_link_libraries(sensor_button
         hardware_adc
         pico_cyw43_arch_lwip_threadsafe_background
         hardware_pwm
-        fatfs
-        hardware_spi)
+        hardware_spi
+        FreeRTOS-Kernel-Heap4)
+        
 
 # Add the standard include files to the build
 target_include_directories(sensor_button PRIVATE

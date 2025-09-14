@@ -40,5 +40,6 @@
     "files.associations": {
         "sockets.h": "c",
         "stdlib.h": "c"
-    }
+    },
+    "cmake.sourceDirectory": "C:/Users/luana/OneDrive/Documentos/projeto-final-luan_paulo_thiago/Etapa 3/sensor_button_pre_sdcard/sensor_button"
 }

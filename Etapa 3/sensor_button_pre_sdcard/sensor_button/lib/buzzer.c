@@ -58,3 +58,11 @@ void buzzer_activation_2(uint buzzer_a, uint buzzer_b, uint32_t duty_cycle_level
 
     sleep_ms(700);
 }
+
+void buzzer_update_status(float temp, int limit) {
+    if (temp > limit) {
+        buzzer_activation_2(BUZZER_A, BUZZER_B, 7812);
+    } else if (temp > limit - 5) {
+        buzzer_activation_1(BUZZER_A, BUZZER_B, 7812);
+    }
+}

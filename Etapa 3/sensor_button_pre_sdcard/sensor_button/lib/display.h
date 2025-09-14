@@ -14,6 +14,9 @@ void display_init(void);
 void display_clear(void);
 void display_show_text(int x, int y, const char *text);
 void display_show_data(float temperature, bool wifi_connected);
+void display_show_limit(int limit);
+void display_show_off(void);
 
 
 #endif
+
