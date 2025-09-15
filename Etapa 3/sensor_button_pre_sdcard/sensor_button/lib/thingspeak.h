@@ -5,6 +5,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
+#include "buffer_manager.h"
 
 // --- CONFIGURAÇÕES DO THINGSPEAK ---
 #define THINGSPEAK_API_KEY "F1M0J5Y2F0D7GZNA"
@@ -28,4 +29,5 @@ void thingspeak_task_init(void);
 // Função para enviar dados ao ThingSpeak (usada internamente pela task)
 void thingspeak_send(float temperature);
 
+void thingspeak_send_batch(temp_record_t* records, int count);
 #endif // THINGSPEAK_H

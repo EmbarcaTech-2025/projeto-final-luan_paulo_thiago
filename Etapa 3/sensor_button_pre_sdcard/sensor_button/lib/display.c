@@ -39,18 +39,21 @@ void display_show_text(int x, int y, const char *text) {
     render_on_display(ssd, &frame_area);
 }
 
-void display_show_data(float temperature, bool wifi_connected) {
+void display_show_data(float temperature, float humidity, float pressure, bool wifi_connected) {
     char buffer[32];
-    display_clear();  
+    display_clear();
 
-    snprintf(buffer, sizeof(buffer), "Temp: %.2f C", temperature);
-    ssd1306_draw_string(ssd, 0, 16, buffer);
+    snprintf(buffer, sizeof(buffer), "T: %.1fC", temperature);
+    ssd1306_draw_string(ssd, 0, 0, buffer); // primeira linha
 
-    if (wifi_connected) {
-        ssd1306_draw_string(ssd, 0, 32, "WiFi: OK");
-    } else {
-        ssd1306_draw_string(ssd, 0, 32, "WiFi: OFF");
-    }
+    snprintf(buffer, sizeof(buffer), "H: %.1f%%", humidity);
+    ssd1306_draw_string(ssd, 0, 20, buffer); // segunda linha (y+10 pixels)
+
+    snprintf(buffer, sizeof(buffer), "P: %.1fhPa", pressure);
+    ssd1306_draw_string(ssd, 0, 35, buffer); // terceira linha (y+20 pixels)
+
+    snprintf(buffer, sizeof(buffer), "WiFi: %s", wifi_connected ? "ON" : "OFF");
+    ssd1306_draw_string(ssd, 0, 50, buffer); // quarta linha (y+30 pixels)
 
     render_on_display(ssd, &frame_area);
 }
@@ -67,7 +70,7 @@ static void display_task(void *pvParameters) {
                     display_show_text(0, 16, msg.text);
                     break;
                 case DISPLAY_MSG_DATA:
-                    display_show_data(msg.temperature, msg.wifi_connected);
+                    display_show_data(msg.temperature, msg.humidity, msg.pressure, msg.wifi_connected);
                     break;
             }
         }

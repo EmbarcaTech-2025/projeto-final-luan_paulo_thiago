@@ -20,10 +20,12 @@ typedef enum {
 } display_msg_type_t;
 
 typedef struct {
-    display_msg_type_t type;
-    char text[32];
+    int type;
     float temperature;
+    float humidity;     
+    float pressure;     
     bool wifi_connected;
+    char text[32];
 } display_msg_t;
 
 extern QueueHandle_t display_queue;
@@ -31,7 +33,7 @@ extern QueueHandle_t display_queue;
 void display_init(void);
 void display_clear(void);
 void display_show_text(int x, int y, const char *text);
-void display_show_data(float temperature, bool wifi_connected);
+void display_show_data(float temperature, float humidity, float pressure, bool wifi_connected);
 
 // Inicializa task do display
 void display_task_init(void);

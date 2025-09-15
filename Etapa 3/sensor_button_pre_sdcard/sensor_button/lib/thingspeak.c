@@ -4,6 +4,7 @@
 #include "wifi_task.h"
 #include <string.h>
 #include <stdio.h>
+#include "buffer_manager.h"
 
 static int dns_fail_count = 0;   // contador de falhas
 bool thingspeak_dns_failed = false; // flag de falha (visível no main)
@@ -189,6 +190,31 @@ static void thingspeak_task(void *pvParameters) {
             }
         }
     }
+}
+
+// Função para enviar múltiplos dados ao ThingSpeak (em lote)
+void thingspeak_send_batch(temp_record_t* records, int count) {
+    if (count == 0) return;
+    
+    printf("[ThingSpeak] Enviando lote de %d registros (1 a cada 15s)\n", count);
+    
+    for (int i = 0; i < count; i++) {
+        if (wifi_connected && !thingspeak_dns_failed) {
+            printf("[ThingSpeak] Enviando registro %d/%d: %.2f°C\n", 
+                   i + 1, count, records[i].temperature);
+            
+            thingspeak_send(records[i].temperature);
+            
+            // Respeita limite de 15 segundos do ThingSpeak free
+            vTaskDelay(pdMS_TO_TICKS(15000));
+            
+        } else {
+            printf("[ThingSpeak] WiFi ou DNS indisponível\n");
+            break;
+        }
+    }
+    
+    printf("[ThingSpeak] Lote enviado completo\n");
 }
 
 // Inicializa fila + task

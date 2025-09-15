@@ -11,13 +11,18 @@
 #include "lib/led.h"
 #include "lib/thingspeak.h"
 #include "lib/buzzer.h"
-
+#include "lib/buffer_manager.h"
 #include "lib/wifi_task.h" 
 
 // Variáveis globais
 static int temp_limit = 25;
 static bool setting_mode = false;
 static absolute_time_t last_thingspeak_send;
+static float last_temperature = 25.0f; 
+
+float get_last_temperature(void) {
+    return last_temperature;
+}
 
 // Task principal
 static void sensors_task(void *pvParameters) {
@@ -64,6 +69,7 @@ static void sensors_task(void *pvParameters) {
             int32_t temperature2 = bmp280_convert_temp(raw_temperature, &params);
 
             float temperature = ((temperature2 / 100.f) + temperature1) / 2.0f;
+            last_temperature = temperature;
 
             // --- Controle de LEDs e envio de dados ---
             bool should_send = false;
@@ -91,22 +97,23 @@ static void sensors_task(void *pvParameters) {
             }
 
             // --- Envio ao ThingSpeak ---
-            if (should_send && wifi_connected &&
-                absolute_time_diff_us(last_thingspeak_send, get_absolute_time()) > 30000000) {
-                if (thingspeak_queue) {
-                xQueueSend(thingspeak_queue, &temperature, 0);
-}
+    if (should_send && wifi_connected &&
+        absolute_time_diff_us(last_thingspeak_send, get_absolute_time()) > 30000000) {
+        if (thingspeak_queue && !buffer_is_sending()) { // ← Só envia se não estiver no modo envio
+            xQueueSend(thingspeak_queue, &temperature, 0);
+        }
+        last_thingspeak_send = get_absolute_time();
+    } else if (should_send && !wifi_connected) {
 
-                last_thingspeak_send = get_absolute_time();
             }
-
             display_msg_t msg = {
                 .type = DISPLAY_MSG_DATA,
                 .temperature = temperature,
+                .humidity = humidity,       // ← adicionado
+                .pressure = raw_pressure / 100.0f, // em hPa se BMP280 retorna em Pa
                 .wifi_connected = wifi_connected
             };
             xQueueSend(display_queue, &msg, 0);
-
 
         } else {
             // Leituras desativadas → LED apagado
@@ -115,8 +122,6 @@ static void sensors_task(void *pvParameters) {
             gpio_put(LED_B, 0);
 
             if (setting_mode) {
-                char buffer[32];
-                snprintf(buffer, sizeof(buffer), "Set Limit: %dC", temp_limit);
                 display_msg_t msg = { .type = DISPLAY_MSG_TEXT };
                 snprintf(msg.text, sizeof(msg.text), "Set Limit: %dC", temp_limit);
                 xQueueSend(display_queue, &msg, 0);
@@ -132,6 +137,9 @@ static void sensors_task(void *pvParameters) {
         vTaskDelay(pdMS_TO_TICKS(50)); // reduz uso de CPU
     }
 }
+
+
+
 
 // Inicialização da task
 void sensors_task_init(void) {
