@@ -2,24 +2,23 @@
 #define BUFFER_MANAGER_H
 
 #include <stdbool.h>
-#include <time.h>
+#include <stdint.h>
+#include "hardware/rtc.h" // Necessário para datetime_t
 
-#define BUFFER_SIZE 1440
+#define BUFFER_SIZE 50 
 
 typedef struct {
     float temperature;
-    uint32_t timestamp;
+    datetime_t timestamp; // MUDANÇA: de um simples número para a estrutura de data/hora
 } temp_record_t;
 
 void buffer_init(void);
 bool buffer_add_record(float temperature);
-bool buffer_save_to_sd(void);
-bool buffer_is_full(void);
+void buffer_clear(void);
 int buffer_get_count(void);
 temp_record_t* buffer_get_records(void);
-void buffer_clear(void);
-bool buffer_should_save(void);
-bool buffer_is_sending(void); // ← Nova função
-void buffer_set_sending(bool sending); // ← Nova função
+bool buffer_is_sending(void);
+void buffer_set_sending(bool sending);
+
 
 #endif

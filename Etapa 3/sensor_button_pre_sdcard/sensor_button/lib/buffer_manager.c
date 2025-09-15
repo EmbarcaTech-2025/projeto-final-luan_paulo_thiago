@@ -2,8 +2,10 @@
 #include "pico/stdlib.h"
 #include <stdio.h>
 #include <string.h>
+#include "hardware/rtc.h" // Adicionar include
 
 static temp_record_t temperature_buffer[BUFFER_SIZE];
+
 static int buffer_index = 0;
 static bool buffer_initialized = false;
 static absolute_time_t last_save_time;
@@ -40,7 +42,6 @@ bool buffer_should_save(void) {
 }
 
 bool buffer_add_record(float temperature) {
-    // Não salva se estiver no modo de envio
     if (is_sending) {
         printf("Modo envio ativo - coleta pausada\n");
         return false;
@@ -51,13 +52,20 @@ bool buffer_add_record(float temperature) {
         return false;
     }
     
+    // --- PONTO CHAVE: CAPTURA A DATA E HORA ATUAIS DO RTC ---
+    rtc_get_datetime(&temperature_buffer[buffer_index].timestamp);
+    // ----------------------------------------------------
+
     temperature_buffer[buffer_index].temperature = temperature;
-    temperature_buffer[buffer_index].timestamp = to_ms_since_boot(get_absolute_time()) / 1000;
     
     buffer_index++;
     last_save_time = get_absolute_time();
     
-    printf("Dado salvo no buffer: %.2f°C (total: %d)\n", temperature, buffer_index);
+    // Log para verificação
+    datetime_t dt = temperature_buffer[buffer_index - 1].timestamp;
+    printf("Dado salvo no buffer: %.2f C em %02d/%02d/%04d %02d:%02d:%02d (total: %d)\n", 
+           temperature, dt.day, dt.month, dt.year, dt.hour - 3, dt.min, dt.sec, buffer_index);
+           
     return true;
 }
 

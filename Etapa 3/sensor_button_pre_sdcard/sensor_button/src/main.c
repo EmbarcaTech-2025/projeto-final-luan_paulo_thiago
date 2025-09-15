@@ -15,6 +15,9 @@
 #include "lib/wifi_task.h"
 #include "lib/sensors_task.h"
 
+#include "lib/logger.h"
+#include "lib/rtc_ntp.h"
+
 static bool wifi_was_connected = false;
 static absolute_time_t last_buffer_save;
 
@@ -56,7 +59,7 @@ static void buffer_manager_task(void *pvParameters) {
         // Salva dados apenas quando: WiFi offline + Leitura ativa + Não está enviando
         if (!wifi_connected && !buffer_is_sending() && is_reading_active()) {
             uint64_t time_diff = absolute_time_diff_us(last_buffer_save, get_absolute_time());
-            if (time_diff >= 180000000) {
+            if (time_diff >= 10000000) {
                 float current_temp = get_last_temperature();
                 if (current_temp != 0.0f) {
                     buffer_add_record(current_temp);
@@ -73,9 +76,15 @@ static void buffer_manager_task(void *pvParameters) {
 
 int main() {
     stdio_init_all();
+    
+    // INICIALIZA LOGGER E RTC
+    logger_init();
+    rtc_ntp_init(); // Inicializa o RTC
+
     button_init();
     joystick_init();
     led_init();
+    buzzer_task_init();
 
     printf("Sistema de Monitoramento com Buffer\n");
 

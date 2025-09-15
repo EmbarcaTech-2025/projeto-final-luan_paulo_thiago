@@ -13,6 +13,7 @@
 #include "lib/buzzer.h"
 #include "lib/buffer_manager.h"
 #include "lib/wifi_task.h" 
+#include "hardware/rtc.h"
 
 // Variáveis globais
 static int temp_limit = 25;
@@ -80,6 +81,7 @@ static void sensors_task(void *pvParameters) {
                 gpio_put(LED_G, 0);
                 gpio_put(LED_B, 0);
                 should_send = true;
+                buzzer_alert_1();
            
             } else if (temperature > temp_limit - 5) {
                 // Alerta - amarelo
@@ -87,6 +89,7 @@ static void sensors_task(void *pvParameters) {
                 gpio_put(LED_G, 1);
                 gpio_put(LED_B, 0);
                 should_send = true;
+                buzzer_alert_1();
                
             } else {
                 // Normal - verde
@@ -97,13 +100,20 @@ static void sensors_task(void *pvParameters) {
             }
 
             // --- Envio ao ThingSpeak ---
-    if (should_send && wifi_connected &&
-        absolute_time_diff_us(last_thingspeak_send, get_absolute_time()) > 30000000) {
-        if (thingspeak_queue && !buffer_is_sending()) { // ← Só envia se não estiver no modo envio
-            xQueueSend(thingspeak_queue, &temperature, 0);
-        }
-        last_thingspeak_send = get_absolute_time();
-    } else if (should_send && !wifi_connected) {
+ if (should_send && wifi_connected &&
+                absolute_time_diff_us(last_thingspeak_send, get_absolute_time()) > 30000000) {
+                
+                if (thingspeak_queue && !buffer_is_sending()) {
+                    // --- PONTO CHAVE: Cria e envia a estrutura completa ---
+                    temp_record_t record_now;
+                    record_now.temperature = temperature;
+                    rtc_get_datetime(&record_now.timestamp); // Pega a hora atual
+
+                    xQueueSend(thingspeak_queue, &record_now, 0);
+                    // --------------------------------------------------
+                }
+                last_thingspeak_send = get_absolute_time();
+            } else if (should_send && !wifi_connected) {
 
             }
             display_msg_t msg = {

@@ -138,33 +138,32 @@ static void thingspeak_dns_found_cb(const char *name, const ip_addr_t *ipaddr, v
 }
 
 // Prepara e inicia o processo de envio dos dados
-void thingspeak_send(float temperature) {
-    // Aloca memória para o estado da requisição
-    // Usamos calloc para zerar a memória
+void thingspeak_send(temp_record_t record) {
     HTTP_REQUEST_STATE *state = calloc(1, sizeof(HTTP_REQUEST_STATE));
     if (!state) {
         printf("Falha ao alocar estado\n");
         return;
     }
 
-    // Formata a requisição HTTP GET com a chave da API e o valor da temperatura
-    snprintf(state->http_request, sizeof(state->http_request),
-             "GET /update?api_key=%s&field1=%.2f HTTP/1.1\r\n"
-             "Host: %s\r\n"
-             "Connection: close\r\n\r\n",
-             THINGSPEAK_API_KEY, temperature, THINGSPEAK_HOST);
+char timestamp_str[25]; 
+snprintf(timestamp_str, sizeof(timestamp_str),
+         "%04d-%02d-%02dT%02d:%02d:%02dZ",  // Formato ISO8601 com 'T' e 'Z'
+         record.timestamp.year, record.timestamp.month, record.timestamp.day,
+         record.timestamp.hour, record.timestamp.min, record.timestamp.sec);
+
+snprintf(state->http_request, sizeof(state->http_request),
+         "GET /update?api_key=%s&field1=%.2f&created_at=%s HTTP/1.1\r\n"
+         "Host: %s\r\n"
+         "Connection: close\r\n\r\n",
+         THINGSPEAK_API_KEY, record.temperature, timestamp_str, THINGSPEAK_HOST);
     
-    // Inicia a resolução de DNS para encontrar o IP do servidor ThingSpeak
     cyw43_arch_lwip_begin();
     
-    // >> CORREÇÃO 2 (continuação): Usamos o novo nome da função aqui.
     err_t err = dns_gethostbyname(THINGSPEAK_HOST, &state->remote_addr, thingspeak_dns_found_cb, state);
     
     cyw43_arch_lwip_end();
 
     if (err == ERR_OK) {
-        // O endereço já estava em cache, podemos conectar diretamente
-        printf("IP do servidor em cache: %s\n", ipaddr_ntoa(&state->remote_addr));
         if (!http_open_connection(state)) {
             http_request_close(state);
         }
@@ -172,21 +171,34 @@ void thingspeak_send(float temperature) {
         printf("Erro imediato no DNS: %d\n", err);
         http_request_close(state);
     }
-    // Se err == ERR_INPROGRESS, o callback `thingspeak_dns_found_cb` será chamado quando terminar.
 }
 
 // Task que processa envios ao ThingSpeak
 static void thingspeak_task(void *pvParameters) {
-    float temperature;
+    temp_record_t record_to_send;
 
     for (;;) {
-        // Espera indefinidamente por um valor
-        if (xQueueReceive(thingspeak_queue, &temperature, portMAX_DELAY)) {
+        // Espera por um registro completo na fila
+        if (xQueueReceive(thingspeak_queue, &record_to_send, portMAX_DELAY)) {
             if (wifi_connected && !thingspeak_dns_failed) {
-                printf("[ThingSpeak] Enviando %.2f °C\n", temperature);
-                thingspeak_send(temperature);
+                
+                /*******************************************************************/
+                /* INÍCIO DA ALTERAÇÃO                                             */
+                /*******************************************************************/
+
+                // Log agora inclui os segundos e usa a hora correta do RTC, sem subtrair.
+                printf("[ThingSpeak] Enviando registro: %.2f C de %02d/%02d %02d:%02d:%02d\n", 
+                       record_to_send.temperature, record_to_send.timestamp.day, 
+                       record_to_send.timestamp.month, record_to_send.timestamp.hour,
+                       record_to_send.timestamp.min, record_to_send.timestamp.sec);
+
+                /*******************************************************************/
+                /* FIM DA ALTERAÇÃO                                                */
+                /*******************************************************************/
+                
+                thingspeak_send(record_to_send);
             } else {
-                printf("[ThingSpeak] WiFi ou DNS indisponível, não enviando\n");
+                printf("[ThingSpeak] WiFi ou DNS indisponivel, nao enviando\n");
             }
         }
     }
@@ -200,16 +212,16 @@ void thingspeak_send_batch(temp_record_t* records, int count) {
     
     for (int i = 0; i < count; i++) {
         if (wifi_connected && !thingspeak_dns_failed) {
-            printf("[ThingSpeak] Enviando registro %d/%d: %.2f°C\n", 
+            printf("[ThingSpeak] Enviando registro %d/%d: %.2f C\n", 
                    i + 1, count, records[i].temperature);
             
-            thingspeak_send(records[i].temperature);
+            thingspeak_send(records[i]);
             
             // Respeita limite de 15 segundos do ThingSpeak free
             vTaskDelay(pdMS_TO_TICKS(15000));
             
         } else {
-            printf("[ThingSpeak] WiFi ou DNS indisponível\n");
+            printf("[ThingSpeak] WiFi ou DNS indisponivel, quebrando o lote.\n");
             break;
         }
     }
@@ -219,7 +231,7 @@ void thingspeak_send_batch(temp_record_t* records, int count) {
 
 // Inicializa fila + task
 void thingspeak_task_init(void) {
-    thingspeak_queue = xQueueCreate(10, sizeof(float));
+    thingspeak_queue = xQueueCreate(10, sizeof(temp_record_t));
     if (!thingspeak_queue) {
         printf("Falha ao criar fila do ThingSpeak!\n");
         return;
