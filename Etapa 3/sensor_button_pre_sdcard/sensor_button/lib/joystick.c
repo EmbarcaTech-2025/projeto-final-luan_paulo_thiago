@@ -42,8 +42,8 @@ void joystick_update_limit(int *temp_limit, bool active) {
         last_update = now;
     }
 
-    if (*temp_limit < 0) *temp_limit = 0;
-    if (*temp_limit > 100) *temp_limit = 100;
+    if (*temp_limit < -40) *temp_limit = -40;
+    if (*temp_limit > 50) *temp_limit = 50;
 }
 
 bool is_setting_mode_active(void) {

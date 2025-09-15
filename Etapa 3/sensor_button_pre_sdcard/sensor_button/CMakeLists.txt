@@ -62,7 +62,9 @@ target_link_libraries(sensor_button
         pico_cyw43_arch_lwip_threadsafe_background
         hardware_pwm
         hardware_spi
-        FreeRTOS-Kernel-Heap4)
+        FreeRTOS-Kernel-Heap4
+        pico_stdio_usb
+        hardware_rtc)
 
 # Add the standard include files to the build
 target_include_directories(sensor_button PRIVATE

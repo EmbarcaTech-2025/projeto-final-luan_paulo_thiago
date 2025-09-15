@@ -12,7 +12,7 @@
 #include "lib/thingspeak.h"
 #include "lib/buzzer.h"
 
-#include "lib/wifi_task.h" // para acessar wifi_connected
+#include "lib/wifi_task.h" 
 
 // Variáveis globais
 static int temp_limit = 25;
@@ -100,7 +100,13 @@ static void sensors_task(void *pvParameters) {
                 last_thingspeak_send = get_absolute_time();
             }
 
-            display_show_data(temperature, wifi_connected);
+            display_msg_t msg = {
+                .type = DISPLAY_MSG_DATA,
+                .temperature = temperature,
+                .wifi_connected = wifi_connected
+            };
+            xQueueSend(display_queue, &msg, 0);
+
 
         } else {
             // Leituras desativadas → LED apagado
@@ -111,9 +117,15 @@ static void sensors_task(void *pvParameters) {
             if (setting_mode) {
                 char buffer[32];
                 snprintf(buffer, sizeof(buffer), "Set Limit: %dC", temp_limit);
-                display_show_text(0, 32, buffer);
+                display_msg_t msg = { .type = DISPLAY_MSG_TEXT };
+                snprintf(msg.text, sizeof(msg.text), "Set Limit: %dC", temp_limit);
+                xQueueSend(display_queue, &msg, 0);
+
             } else {
-                display_show_text(0, 32, "Leitura OFF");
+                display_msg_t msg = { .type = DISPLAY_MSG_TEXT };
+                snprintf(msg.text, sizeof(msg.text), "Leitura OFF");
+                xQueueSend(display_queue, &msg, 0);
+
             }
         }
 

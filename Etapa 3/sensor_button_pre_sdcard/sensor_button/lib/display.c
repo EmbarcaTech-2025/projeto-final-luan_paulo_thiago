@@ -13,6 +13,9 @@ struct render_area frame_area = {
     .end_page = ssd1306_n_pages - 1
 };
 
+// Fila global
+QueueHandle_t display_queue = NULL;
+
 void display_init() {
     i2c_init(i2c1, 400 * 1000);
     gpio_set_function(I2C_SDA, GPIO_FUNC_I2C);
@@ -31,14 +34,14 @@ void display_clear(void) {
 }
 
 void display_show_text(int x, int y, const char *text) {
-    display_clear();  // limpa buffer antes
+    display_clear();  
     ssd1306_draw_string(ssd, x, y, (char *)text);
     render_on_display(ssd, &frame_area);
 }
 
 void display_show_data(float temperature, bool wifi_connected) {
     char buffer[32];
-    display_clear();  // limpa antes de redesenhar
+    display_clear();  
 
     snprintf(buffer, sizeof(buffer), "Temp: %.2f C", temperature);
     ssd1306_draw_string(ssd, 0, 16, buffer);
@@ -52,3 +55,33 @@ void display_show_data(float temperature, bool wifi_connected) {
     render_on_display(ssd, &frame_area);
 }
 
+// Task que consome mensagens e desenha no display
+static void display_task(void *pvParameters) {
+    display_msg_t msg;
+    display_init();
+
+    for (;;) {
+        if (xQueueReceive(display_queue, &msg, portMAX_DELAY)) {
+            switch (msg.type) {
+                case DISPLAY_MSG_TEXT:
+                    display_show_text(0, 16, msg.text);
+                    break;
+                case DISPLAY_MSG_DATA:
+                    display_show_data(msg.temperature, msg.wifi_connected);
+                    break;
+            }
+        }
+    }
+}
+
+void display_task_init(void) {
+    display_queue = xQueueCreate(5, sizeof(display_msg_t));
+    xTaskCreate(
+        display_task,
+        "DisplayTask",
+        2048,
+        NULL,
+        tskIDLE_PRIORITY + 2,
+        NULL
+    );
+}

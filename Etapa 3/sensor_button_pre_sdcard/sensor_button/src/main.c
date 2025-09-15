@@ -7,6 +7,7 @@
 #include "lib/joystick.h"
 #include "lib/led.h"
 #include "lib/buzzer.h"
+#include "lib/display.h"
 
 #include "lib/wifi_task.h"
 #include "lib/sensors_task.h"
@@ -22,6 +23,7 @@ int main() {
 
     wifi_task_init();
     sensors_task_init();
+    display_task_init(); 
     thingspeak_task_init();  
 
     vTaskStartScheduler();
