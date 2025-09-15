@@ -97,6 +97,7 @@ static void sensors_task(void *pvParameters) {
                 gpio_put(LED_G, 1);
                 gpio_put(LED_B, 0);
                 should_send = false;
+                buzzer_emergency_stop();
             }
 
             // --- Envio ao ThingSpeak ---
@@ -132,11 +133,13 @@ static void sensors_task(void *pvParameters) {
             gpio_put(LED_B, 0);
 
             if (setting_mode) {
+                buzzer_emergency_stop();
                 display_msg_t msg = { .type = DISPLAY_MSG_TEXT };
                 snprintf(msg.text, sizeof(msg.text), "Set Limit: %dC", temp_limit);
                 xQueueSend(display_queue, &msg, 0);
 
             } else {
+                buzzer_emergency_stop();
                 display_msg_t msg = { .type = DISPLAY_MSG_TEXT };
                 snprintf(msg.text, sizeof(msg.text), "Leitura OFF");
                 xQueueSend(display_queue, &msg, 0);

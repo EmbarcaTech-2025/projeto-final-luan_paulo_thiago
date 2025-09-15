@@ -136,3 +136,12 @@ bool buzzer_off(void) {
     buzzer_cmd_t cmd = { .type = BUZZER_OFF };
     return buzzer_send_command(cmd);
 }
+
+void buzzer_emergency_stop(void) {
+    // Limpa todos os comandos pendentes na fila
+    xQueueReset(buzzer_queue);
+    
+    // Desliga o PWM imediatamente
+    pwm_set_gpio_level(buzzer_a, 0);
+    pwm_set_gpio_level(buzzer_b, 0);
+}

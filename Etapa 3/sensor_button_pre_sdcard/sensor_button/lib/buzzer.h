@@ -45,5 +45,6 @@ bool buzzer_off(void);
 void buzzer_activation_1(void);
 void buzzer_activation_2(void);
 void buzzer_beep(uint32_t duration_ms);
+void buzzer_emergency_stop(void);
 
 #endif
