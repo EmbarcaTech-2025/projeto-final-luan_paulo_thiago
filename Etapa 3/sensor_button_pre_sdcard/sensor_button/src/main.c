@@ -59,7 +59,7 @@ static void buffer_manager_task(void *pvParameters) {
         // Salva dados apenas quando: WiFi offline + Leitura ativa + Não está enviando
         if (!wifi_connected && !buffer_is_sending() && is_reading_active()) {
             uint64_t time_diff = absolute_time_diff_us(last_buffer_save, get_absolute_time());
-            if (time_diff >= 10000000) {
+            if (time_diff >= 180000000) {
                 float current_temp = get_last_temperature();
                 if (current_temp != 0.0f) {
                     buffer_add_record(current_temp);

@@ -6,9 +6,10 @@
 #define WIFI_SSID               "POCO X7 Pro"
 #define WIFI_PASSWORD           "12345678"
 
-// --- Parâmetros para a lógica de reconexão ---
+// --- Parâmetros para a lógica de reconexão (AJUSTADOS) ---
 #define WIFI_CHECK_INTERVAL_MS      2000  // Intervalo da verificação de status: 2 segundos
-#define WIFI_RETRY_BACKOFF_MIN_MS   30000  // Tempo mínimo de espera para reconectar: 30 segundos
+#define WIFI_RETRY_BACKOFF_MIN_MS   5000  // Tempo mínimo de espera para reconectar: 5 segundos
+#define WIFI_RETRY_BACKOFF_MAX_MS   60000 // Tempo máximo de espera para reconectar: 60 segundos
 #define WIFI_CONNECT_TIMEOUT_MS     10000 // Tempo máximo para a tentativa de conexão: 10 segundos
 
 // Status da conexão (variável global)
@@ -48,36 +49,49 @@ static bool connect_wifi() {
 static void wifi_task(void *pvParameters) {
     cyw43_arch_enable_sta_mode();
 
+    /*******************************************************************/
+    /* ALTERAÇÃO 1: Tenta conectar imediatamente ao iniciar a task     */
+    /*******************************************************************/
+    printf("Iniciando primeira tentativa de conexão Wi-Fi...\n");
+    connect_wifi();
+    /*******************************************************************/
+
     uint32_t backoff_ms = WIFI_RETRY_BACKOFF_MIN_MS;
-    TickType_t last_retry_ticks = 0;
+    TickType_t last_retry_ticks = xTaskGetTickCount();
 
     for (;;) {
-        // A função cyw43_tcpip_link_status é mais completa que a cyw43_wifi_link_status
         int link_status = cyw43_tcpip_link_status(&cyw43_state, CYW43_ITF_STA);
 
         if (link_status == CYW43_LINK_UP) {
-            // Se a conexão está OK
             if (!wifi_connected) {
                 printf("Wi-Fi estabelecido (link UP).\n");
                 wifi_connected = true;
                 cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
-                backoff_ms = WIFI_RETRY_BACKOFF_MIN_MS; // Reseta o backoff para a próxima vez
+                backoff_ms = WIFI_RETRY_BACKOFF_MIN_MS; 
             }
         } else {
-            // Se a conexão caiu ou não foi estabelecida
             if (wifi_connected) {
                 printf("Wi-Fi desconectado! (status: %d)\n", link_status);
                 wifi_connected = false;
                 cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
-                last_retry_ticks = xTaskGetTickCount(); // Inicia o timer para a primeira tentativa
+                last_retry_ticks = xTaskGetTickCount();
             }
 
-            // Verifica se já é hora de tentar reconectar
             if ((xTaskGetTickCount() - last_retry_ticks) >= pdMS_TO_TICKS(backoff_ms)) {
                 if (connect_wifi()) {
-                    // Se conectou, a própria função já ajusta o estado
+                    backoff_ms = WIFI_RETRY_BACKOFF_MIN_MS; // Sucesso, reseta o backoff
+                } else {
+                    /*******************************************************************/
+                    /* ALTERAÇÃO 2: Lógica de backoff exponencial reintroduzida      */
+                    /*******************************************************************/
+                    printf("Aguardando %lu ms para a próxima tentativa...\n", backoff_ms);
+                    backoff_ms *= 2; // Dobra o tempo de espera
+                    if (backoff_ms > WIFI_RETRY_BACKOFF_MAX_MS) {
+                        backoff_ms = WIFI_RETRY_BACKOFF_MAX_MS; // Limita ao máximo
+                    }
+                    /*******************************************************************/
                 }
-                last_retry_ticks = xTaskGetTickCount(); // Atualiza o tempo da última tentativa
+                last_retry_ticks = xTaskGetTickCount();
             }
         }
 
